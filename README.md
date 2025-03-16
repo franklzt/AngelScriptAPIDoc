@@ -20,3 +20,7 @@ If you are using binary version, you need to modify the version id to 5.4.0 for 
 <p align="center">
   <img src="ReadMe.png" alt="Off line doc Index">
 </p>
+
+<p align="center">
+  <img src="Toolbar_GenerateDoc_Button.png" alt="Generate button in toolbar ">
+</p>
