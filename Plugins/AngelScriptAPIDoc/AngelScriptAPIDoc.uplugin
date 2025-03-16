@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "AngelScriptAPIDoc",
+	"Description": "Easy way for AngelScript API Generation",
+	"Category": "Other",
+	"CreatedBy": "Frank Lzt",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "AngelScriptAPIDoc",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
