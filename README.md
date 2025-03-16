@@ -28,7 +28,8 @@ Section D:
 本项目需要使用 https://github.com/Hazelight/UnrealEngine-Angelscript 的 UE 引擎，从UE官方安装的引擎是不能使用的。因为我使用的是最新的 5.5.4版本，需要自行修改插件和项目的引擎版本号。
 比如，如果你使用的是　5.4.0 版本的引擎，需要修改项目与插件的版本为5.4.0 。
 也可以使用 https://github.com/franklzt/UnrealEngine-Angelscript 的 UE 引擎，不过需要自己编译引擎。该分支加了方便的批处理文件用于编译本地版本，包括服务端，客户端，Android。
-同时，需要的工具 https://www.naturaldocs.org/，请自行安装，之后再加入 path 的环境变量中，以保证可以全局使用 NaturalDocs.exe 来生成 API　文档。
+同时，需要的工具 https://www.naturaldocs.org/
+请自行安装，之后再加入 path 的环境变量中，以保证可以全局使用 NaturalDocs.exe 来生成 API　文档。
 
 1. 项目主要用于是提供 AngelScript API 的本地文档。 可以从 Release 中下载HTML.Zip文件直接使用。 
 2. 如果想要自己制作 API 文档。可以下载此项目，编译后，打开后点工具栏的黄色按钮。参考下面最后一张图，完成后，复制项目中的 Docs 文件夹到 Plugins\AngelScriptAPIDoc\NatureDoc 目录下。
