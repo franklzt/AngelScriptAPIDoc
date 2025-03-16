@@ -16,3 +16,7 @@ If you are using binary version, you need to modify the version id to 5.4.0 for 
 3. Copy the Generated Docs folder under your project to this plugin's NatureDoc folder.
 4. Double Click the GenerateDoc.bat under NatureDoc folder,waiting until finished.
 5. Open the NatureDoc\HTML\index.html and and Enjoy the offline doc.
+
+<p align="center">
+  <img src="ReadMe.png" alt="Off line doc Index">
+</p>
