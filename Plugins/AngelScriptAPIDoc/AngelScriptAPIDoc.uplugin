@@ -4,7 +4,7 @@
 	"VersionName": "1.0",
 	"FriendlyName": "AngelScriptAPIDoc",
 	"Description": "Easy way for AngelScript API Generation",
-	"Category": "Other",
+	"Category": "AngelScript",
 	"CreatedBy": "Frank Lzt",
 	"CreatedByURL": "",
 	"DocsURL": "",
@@ -13,7 +13,7 @@
 	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
-	"Installed": false,
+	"Installed": true,
 	"Modules": [
 		{
 			"Name": "AngelScriptAPIDoc",
