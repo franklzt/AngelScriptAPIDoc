@@ -7,6 +7,8 @@
 #include "ToolMenus.h"
 
 #include "AngelscriptManager.h"
+#include "EditorDialogLibrary.h"
+#include "Async/Async.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
@@ -16,11 +18,13 @@ static const FName AngelScriptAPIDocTabName("AngelScriptAPIDoc");
 
 
 #if WITH_EDITOR
-void GenerateDocShowNotification(bool Success, const FText& Title, const FText* SubText)
+TSharedPtr<SNotificationItem>  GenerateDocShowNotification(bool Success, const FText& Title, const FText* SubText,bool bInFireAndForget = true,bool bUseInSuccessFailIcons = true)
 {
 	FNotificationInfo Info(Title);
 	Info.ExpireDuration = 5.0f;
-	Info.bUseSuccessFailIcons = true;
+	Info.bUseSuccessFailIcons = bUseInSuccessFailIcons;
+	Info.bFireAndForget = bInFireAndForget;
+	Info.Image =  FAppStyle::GetBrush("AppIcon");
 	if (SubText)
 	{
 		Info.SubText = *SubText;
@@ -28,7 +32,9 @@ void GenerateDocShowNotification(bool Success, const FText& Title, const FText* 
 	if (TSharedPtr<SNotificationItem> CompileNotification = FSlateNotificationManager::Get().AddNotification(Info))
 	{
 		CompileNotification->SetCompletionState(Success ? SNotificationItem::CS_Success : SNotificationItem::CS_Fail);
+		return CompileNotification;
 	}
+	return TSharedPtr<SNotificationItem>();
 }
 #endif
 
@@ -68,10 +74,25 @@ void FAngelScriptAPIDocModule::ShutdownModule()
 
 void FAngelScriptAPIDocModule::PluginButtonClicked()
 {
-	static const FText SuccessText = LOCTEXT("Success", "Generate API Doc succeeded");
+
+	static const FText StartText = LOCTEXT("Start", "Generating AngelScript API Doc");
 	static const FText ReinstancingText = LOCTEXT("Generating", "AngelScript API Doc");
-	FAngelscriptDocs::DumpDocumentation(FAngelscriptManager::Get().GetScriptEngine());
-	GenerateDocShowNotification(true, SuccessText, &ReinstancingText);
+	TSharedPtr<SNotificationItem> StartNotifyInfo = GenerateDocShowNotification(true, StartText, &ReinstancingText,false,false);
+	
+	auto tempFunction = [StartNotifyInfo]
+	{
+		FAngelscriptDocs::DumpDocumentation(FAngelscriptManager::Get().GetScriptEngine());
+		auto tempFinished = [StartNotifyInfo]
+		{
+			StartNotifyInfo.Get()->Fadeout();
+			FString GeneratedCodePath =  TEXT("The Generated Code is Under ") +  FPaths::ProjectDir() + TEXT("Docs directory");
+			UEditorDialogLibrary::ShowMessage(FText::FromString(TEXT("AngelScript API Doc")),
+				FText::FromString(GeneratedCodePath),EAppMsgType::Ok,EAppReturnType::No,EAppMsgCategory::Success);
+		};
+		AsyncTask(ENamedThreads::GameThread, tempFinished);
+	};
+	Async(EAsyncExecution::ThreadPool, tempFunction);
+	
 }
 
 void FAngelScriptAPIDocModule::RegisterMenus()

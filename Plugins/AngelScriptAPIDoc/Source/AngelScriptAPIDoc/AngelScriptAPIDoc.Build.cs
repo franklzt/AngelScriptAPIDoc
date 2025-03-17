@@ -42,7 +42,7 @@ public class AngelScriptAPIDoc : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore", "AngelscriptCode"
+				"SlateCore", "AngelscriptCode", "EditorScriptingUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
