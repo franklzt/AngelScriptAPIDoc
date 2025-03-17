@@ -20,7 +20,7 @@
 static const FName AngelScriptAPIDocTabName("AngelScriptAPIDoc");
 
 #define LOCTEXT_NAMESPACE "FAngelScriptAPIDocModule"
-
+bool bCanGenerateDoc = true;
 #if WITH_EDITOR
 TSharedPtr<SNotificationItem> GenerateDocShowNotification(bool Success, const FText& Title, const FText* SubText,
                                                           bool bInFireAndForget = true,
@@ -50,7 +50,7 @@ TSharedPtr<SNotificationItem> GenerateDocShowNotification(bool Success, const FT
 void FAngelScriptAPIDocModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-
+	bCanGenerateDoc = true;
 	FAngelScriptAPIDocStyle::Initialize();
 	FAngelScriptAPIDocStyle::ReloadTextures();
 
@@ -58,10 +58,11 @@ void FAngelScriptAPIDocModule::StartupModule()
 
 	PluginCommands = MakeShareable(new FUICommandList);
 
+	auto canExecute = FCanExecuteAction::CreateLambda([] () { return bCanGenerateDoc; });
 	PluginCommands->MapAction(
 		FAngelScriptAPIDocCommands::Get().PluginAction,
 		FExecuteAction::CreateRaw(this, &FAngelScriptAPIDocModule::PluginButtonClicked),
-		FCanExecuteAction());
+		canExecute);
 
 	UToolMenus::RegisterStartupCallback(
 		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FAngelScriptAPIDocModule::RegisterMenus));
@@ -83,6 +84,7 @@ void FAngelScriptAPIDocModule::ShutdownModule()
 
 void FAngelScriptAPIDocModule::PluginButtonClicked()
 {
+	bCanGenerateDoc = false;
 #if WITH_EDITOR
 	auto FinishLamda = []
 	{
@@ -99,6 +101,7 @@ void FAngelScriptAPIDocModule::PluginButtonClicked()
 					UEditorDialogLibrary::ShowMessage(FText::FromString(TEXT("AngelScript API Doc")),
 					                                  FText::FromString(GeneratedCodePath), EAppMsgType::Ok,
 					                                  EAppReturnType::Ok, EAppMsgCategory::Success);
+					bCanGenerateDoc = true;
 				});
 				GEditor->GetTimerManager().Get().SetTimer(DelegateHandle, Delegate, 2.0, false);
 			}
