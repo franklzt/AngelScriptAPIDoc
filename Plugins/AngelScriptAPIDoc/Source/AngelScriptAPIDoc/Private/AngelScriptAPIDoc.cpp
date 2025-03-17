@@ -11,27 +11,35 @@
 #include "Async/Async.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"
+//#include "Containers/Ticker.h"
+#include "Editor.h"
+#include "Editor/EditorEngine.h"
+
+#include "Engine/TimerHandle.h"
 
 static const FName AngelScriptAPIDocTabName("AngelScriptAPIDoc");
 
 #define LOCTEXT_NAMESPACE "FAngelScriptAPIDocModule"
 
-
 #if WITH_EDITOR
-TSharedPtr<SNotificationItem>  GenerateDocShowNotification(bool Success, const FText& Title, const FText* SubText,bool bInFireAndForget = true,bool bUseInSuccessFailIcons = true)
+TSharedPtr<SNotificationItem> GenerateDocShowNotification(bool Success, const FText& Title, const FText* SubText,
+                                                          bool bInFireAndForget = true,
+                                                          bool bUseInSuccessFailIcons = true)
 {
 	FNotificationInfo Info(Title);
-	Info.ExpireDuration = 5.0f;
-	Info.bUseSuccessFailIcons = bUseInSuccessFailIcons;
+	Info.ExpireDuration = 1.0f;
+	Info.bUseSuccessFailIcons = true;
 	Info.bFireAndForget = bInFireAndForget;
-	Info.Image =  FAppStyle::GetBrush("AppIcon");
+	Info.bUseThrobber = true;
+	Info.bUseThrobber = true;
 	if (SubText)
 	{
 		Info.SubText = *SubText;
 	}
 	if (TSharedPtr<SNotificationItem> CompileNotification = FSlateNotificationManager::Get().AddNotification(Info))
 	{
-		CompileNotification->SetCompletionState(Success ? SNotificationItem::CS_Success : SNotificationItem::CS_Fail);
+		CompileNotification->SetCompletionState(
+			SNotificationItem::CS_Pending /*Success ? SNotificationItem::CS_Success : SNotificationItem::CS_Fail*/);
 		return CompileNotification;
 	}
 	return TSharedPtr<SNotificationItem>();
@@ -42,12 +50,12 @@ TSharedPtr<SNotificationItem>  GenerateDocShowNotification(bool Success, const F
 void FAngelScriptAPIDocModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	
+
 	FAngelScriptAPIDocStyle::Initialize();
 	FAngelScriptAPIDocStyle::ReloadTextures();
 
 	FAngelScriptAPIDocCommands::Register();
-	
+
 	PluginCommands = MakeShareable(new FUICommandList);
 
 	PluginCommands->MapAction(
@@ -55,7 +63,8 @@ void FAngelScriptAPIDocModule::StartupModule()
 		FExecuteAction::CreateRaw(this, &FAngelScriptAPIDocModule::PluginButtonClicked),
 		FCanExecuteAction());
 
-	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FAngelScriptAPIDocModule::RegisterMenus));
+	UToolMenus::RegisterStartupCallback(
+		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FAngelScriptAPIDocModule::RegisterMenus));
 }
 
 void FAngelScriptAPIDocModule::ShutdownModule()
@@ -74,25 +83,46 @@ void FAngelScriptAPIDocModule::ShutdownModule()
 
 void FAngelScriptAPIDocModule::PluginButtonClicked()
 {
+#if WITH_EDITOR
+	auto FinishLamda = []
+	{
+		if (GEditor)
+		{
+			if (GEditor->IsRealTimeAudioMuted())
+			{
+				FTimerHandle DelegateHandle;
+				FTimerDelegate Delegate;
+				Delegate.BindLambda([DelegateHandle]()
+				{
+					FString GeneratedCodePath = TEXT("The Generated Code is Under ") + FPaths::ProjectDir() + TEXT(
+						"Docs directory");
+					UEditorDialogLibrary::ShowMessage(FText::FromString(TEXT("AngelScript API Doc")),
+					                                  FText::FromString(GeneratedCodePath), EAppMsgType::Ok,
+					                                  EAppReturnType::Ok, EAppMsgCategory::Success);
+				});
+				GEditor->GetTimerManager().Get().SetTimer(DelegateHandle, Delegate, 2.0, false);
+			}
+		}
+	};
 
 	static const FText StartText = LOCTEXT("Start", "Generating AngelScript API Doc");
 	static const FText ReinstancingText = LOCTEXT("Generating", "AngelScript API Doc");
-	TSharedPtr<SNotificationItem> StartNotifyInfo = GenerateDocShowNotification(true, StartText, &ReinstancingText,false,false);
-	
-	auto tempFunction = [StartNotifyInfo]
+	TSharedPtr<SNotificationItem> StartNotifyInfo = GenerateDocShowNotification(
+		true, StartText, &ReinstancingText, false, false);
+
+	auto tempFunction = [ StartNotifyInfo,FinishLamda]
 	{
 		FAngelscriptDocs::DumpDocumentation(FAngelscriptManager::Get().GetScriptEngine());
-		auto tempFinished = [StartNotifyInfo]
+		auto tempFinished = [StartNotifyInfo,FinishLamda]
 		{
-			StartNotifyInfo.Get()->Fadeout();
-			FString GeneratedCodePath =  TEXT("The Generated Code is Under ") +  FPaths::ProjectDir() + TEXT("Docs directory");
-			UEditorDialogLibrary::ShowMessage(FText::FromString(TEXT("AngelScript API Doc")),
-				FText::FromString(GeneratedCodePath),EAppMsgType::Ok,EAppReturnType::No,EAppMsgCategory::Success);
+			StartNotifyInfo.Get()->SetCompletionState(SNotificationItem::CS_Success);
+			StartNotifyInfo.Get()->ExpireAndFadeout();
+			AsyncTask(ENamedThreads::GameThread, FinishLamda);
 		};
 		AsyncTask(ENamedThreads::GameThread, tempFinished);
 	};
 	Async(EAsyncExecution::ThreadPool, tempFunction);
-	
+#endif
 }
 
 void FAngelScriptAPIDocModule::RegisterMenus()
@@ -113,13 +143,15 @@ void FAngelScriptAPIDocModule::RegisterMenus()
 		{
 			FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("PluginTools");
 			{
-				FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FAngelScriptAPIDocCommands::Get().PluginAction));
+				FToolMenuEntry& Entry = Section.AddEntry(
+					FToolMenuEntry::InitToolBarButton(FAngelScriptAPIDocCommands::Get().PluginAction));
 				Entry.SetCommandList(PluginCommands);
 			}
 		}
 	}
 }
 
+
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FAngelScriptAPIDocModule, AngelScriptAPIDoc)

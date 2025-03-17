@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Modules/ModuleManager.h"
+#include "UObject/ObjectMacros.h"
 
 class FToolBarBuilder;
 class FMenuBuilder;
@@ -22,6 +23,7 @@ private:
 
 	void RegisterMenus();
 
+	
 
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;

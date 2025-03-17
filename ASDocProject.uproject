@@ -19,9 +19,12 @@
 			]
 		},
 		{
-      "Name": "Angelscript",
-      "Enabled": true
-    }
-		
+			"Name": "Angelscript",
+			"Enabled": true
+		},
+		{
+			"Name": "AngelScriptAPIDoc",
+			"Enabled": true
+		}
 	]
 }
